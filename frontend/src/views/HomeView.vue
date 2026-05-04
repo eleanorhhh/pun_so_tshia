@@ -1,103 +1,50 @@
-<script setup lang="ts">
-import { ref } from 'vue'
-
-const healthStatus = ref<string | null>(null)
-const healthError = ref<string | null>(null)
-const loading = ref(false)
-
-async function checkHealth() {
-  loading.value = true
-  healthError.value = null
-  healthStatus.value = null
-  try {
-    const res = await fetch('/api/health')
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`)
-    }
-    const data = (await res.json()) as { status?: string }
-    healthStatus.value = data.status ?? JSON.stringify(data)
-  } catch (e) {
-    healthError.value = e instanceof Error ? e.message : String(e)
-  } finally {
-    loading.value = false
-  }
-}
-</script>
-
 <template>
-  <main class="home">
-    <h1>高雄垃圾車即時系統</h1>
-    <p class="subtitle">pun_so_tshia · Monorepo 初始骨架</p>
-    <section class="panel">
-      <h2>後端連線</h2>
-      <p class="hint">開發時透過 Vite 將 <code>/api</code> 代理至 FastAPI（<code>127.0.0.1:8000</code>）。</p>
-      <button type="button" :disabled="loading" @click="checkHealth">
-        {{ loading ? '檢查中…' : '檢查 /api/health' }}
-      </button>
-      <p v-if="healthStatus" class="ok">狀態：{{ healthStatus }}</p>
-      <p v-if="healthError" class="err">錯誤：{{ healthError }}</p>
-    </section>
+  <main class="dashboard">
+    <!-- 左邊放列表 -->
+    <div class="sidebar">
+      <TruckList />
+    </div>
+
+    <!-- 右邊放地圖 -->
+    <div class="map-area">
+      <MapViewer />
+    </div>
   </main>
 </template>
 
+<script setup lang="ts">
+import { onMounted } from 'vue';
+import MapViewer from '@/components/MapViewer.vue';
+import TruckList from '@/components/TruckList.vue';
+import { useTruckStore } from '@/stores/truckStore';
+
+const truckStore = useTruckStore();
+
+onMounted(() => {
+  // 元件掛載時，呼叫 API 抓取資料
+  // 資料一回來，TruckList 跟 MapViewer 就會自動同步更新！
+  truckStore.fetchTruckData();
+});
+</script>
+
 <style scoped>
-.home {
-  max-width: 40rem;
+.dashboard {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  width: 100vw; /* 確保整個儀表板有撐滿視窗 */
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem 1rem;
 }
 
-h1 {
-  font-size: 1.5rem;
-  line-height: 1.3;
-  margin-bottom: 0.25rem;
+.sidebar {
+  width: 300px;
+  flex-shrink: 0; /* 確保側邊欄不會被地圖擠壓 */
 }
 
-.subtitle {
-  color: var(--color-text);
-  opacity: 0.75;
-  margin-bottom: 2rem;
-}
-
-.panel {
-  padding: 1.25rem;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  background: var(--color-background);
-}
-
-.panel h2 {
-  font-size: 1.1rem;
-  margin-bottom: 0.5rem;
-}
-
-.hint {
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
-  opacity: 0.85;
-}
-
-button {
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  border: 1px solid var(--color-border);
-  background: var(--color-background-mute);
-  cursor: pointer;
-  font: inherit;
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.ok {
-  margin-top: 1rem;
-  color: seagreen;
-}
-
-.err {
-  margin-top: 1rem;
-  color: crimson;
+.map-area {
+  flex-grow: 1;
+  width: 100%; /* 🌟 關鍵：強制地圖區域佔滿剩餘的空間 */
+  min-width: 0; /* 🌟 雙重保險：防止 Flex 子元素計算錯誤而縮水 */
 }
 </style>
