@@ -1,0 +1,15 @@
+{
+  "name": "pun-so-tshia",
+  "private": true,
+  "description": "高雄垃圾車即時系統 Monorepo（Vue 3 + FastAPI）",
+  "scripts": {
+    "install:all": "npm install && npm install --prefix frontend",
+    "dev": "concurrently -n frontend,backend -c blue,green \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "cross-env PYTHONPATH=backend python -m uvicorn app.main:app --reload --reload-dir backend --host 127.0.0.1 --port 8000"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3"
+  }
+}
