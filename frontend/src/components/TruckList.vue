@@ -3,8 +3,8 @@
     <h3>🗑️ 垃圾車時刻表</h3>
     <div class="list-container">
       <div class="list-item" v-for="(stop, index) in truckStore.truckData" :key="index">
-        <div class="time">{{ stop.time }}</div>
-        <div class="location">{{ stop.location }}</div>
+        <div class="time">{{ stop.停留時間}}</div>
+        <div class="location">{{ stop.停留地點 }}</div>
       </div>
     </div>
   </div>
