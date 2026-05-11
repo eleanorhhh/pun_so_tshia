@@ -1,67 +1,82 @@
 <template>
-  <div class="map-container">
-    <div id="tw-map" style="height: 600px; width: 100%; border-radius: 8px;"></div>
+  <!-- 使用 Tailwind 設定地圖容器大小與圓角 -->
+  <div class="relative w-full h-[600px] rounded-xl overflow-hidden shadow-lg">
+    <div id="map" class="w-full h-full z-0"></div>
+
+    <div class="absolute top-4 left-4 z-10 bg-gray-800 text-white px-4 py-2 rounded-md opacity-90 shadow-md">
+      目前顯示：高雄市行政區
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, watch } from 'vue';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import * as topojson from 'topojson-client';
-import { useTruckStore } from '@/stores/truckStore'; // 引入 Store
+import { onMounted, shallowRef } from 'vue'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 
-import iconUrl from 'leaflet/dist/images/marker-icon.png';
-import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
-import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
+// 🌟 關鍵修正 1：改用 shallowRef
+// 絕對不要用 ref 存地圖！shallowRef 可以避免 Vue 去監聽地圖內部的複雜狀態，解決 99% 的型別與效能問題。
+const map = shallowRef<L.Map | null>(null)
 
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl, iconUrl, shadowUrl
-});
+onMounted(async () => {
+  // 初始化地圖，中心點大約在高雄三民區一帶
+  map.value = L.map('map').setView([22.645, 120.315], 12)
 
-// 啟用 Store
-const truckStore = useTruckStore();
+  // 🌟 關鍵修正 2：標準的 TypeScript 防呆檢查
+  // 用這個取代 map.value! 的驚嘆號寫法。只要過了這行，TS 就會知道 map.value 絕對存在。
+  if (!map.value) return
 
-onMounted(() => {
-  const map = L.map('tw-map', {
-    center: [22.6273, 120.3014], zoom: 11, minZoom: 7,
-    maxBounds: L.latLngBounds(L.latLng(21.0, 119.0), L.latLng(26.0, 122.5)),
-    maxBoundsViscosity: 1.0
-  });
+  // 載入深色模式底圖
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors',
+    maxZoom: 19
+  }).addTo(map.value)
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18, attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(map);
+  try {
+    const response = await fetch('/kaohsiung_districts.json')
+    const geojsonData = await response.json()
 
-  fetch('https://cdn.jsdelivr.net/npm/taiwan-atlas/towns-10t.json')
-    .then(res => res.json())
-    .then(topoData => {
-      const geoJsonData = topojson.feature(topoData, topoData.objects.towns);
-      L.geoJSON(geoJsonData, {
-        filter: (feature) => feature.properties.COUNTYNAME === '高雄市',
-        style: { color: '#3388ff', weight: 2, fillColor: '#3388ff', fillOpacity: 0.15 },
-        onEachFeature: (feature, layer) => {
-          layer.bindPopup(`<b>高雄市 ${feature.properties.TOWNNAME || '未知區域'}</b>`);
+    // 將 GeoJSON 加入地圖
+    L.geoJSON(geojsonData, {
+
+      // 🌟 關鍵修正 3：箭頭函式簡化
+      // 既然沒用到 feature，直接省略參數，回傳物件即可
+      style: () => ({
+        color: '#10B981',
+        weight: 2,
+        fillColor: '#047857',
+        fillOpacity: 0.1
+      }),
+
+      onEachFeature: (feature, layer) => {
+        // 多做一層檢查，確保資料真的有 TOWNNAME 欄位才綁定 Tooltip
+        const districtName = feature.properties?.TOWNNAME
+
+        if (districtName) {
+          layer.bindTooltip(districtName, {
+            permanent: false,
+            direction: 'center',
+            className: 'bg-transparent text-white border-none shadow-none text-lg font-bold'
+          })
         }
-      }).addTo(map);
-    });
 
-  // 監聽 Store 裡面的 truckData，一有資料就畫上大頭針
-  watch(() => truckStore.truckData, (newData) => {
-    newData.forEach(stop => {
-      // ⚠️ 一樣請對應您 Interface 裡面定義的真實屬性
-      if (stop.lat && stop.lng) {
-        const marker = L.marker([stop.lat, stop.lng]).addTo(map);
-        marker.bindPopup(`<b>🚚 停靠點</b><br>🕒 ${stop.time}<br>📍 ${stop.location}`);
+        // 🌟 關鍵修正 4：簡化滑鼠事件寫法
+        layer.on({
+          mouseover: (e) => e.target.setStyle({ fillOpacity: 0.4 }),
+          mouseout: (e) => e.target.setStyle({ fillOpacity: 0.1 })
+        })
       }
-    });
-  }, { immediate: true, deep: true });
-});
+    }).addTo(map.value)
+
+  } catch (error) {
+    console.error('無法載入行政區邊界資料:', error)
+  }
+})
 </script>
 
 <style scoped>
-.map-container {
-  width: 100%;
-  height: 100%;
+/* 隱藏 Leaflet 預設的白色背景，讓深色主題更完美 */
+.leaflet-container {
+  background: #1a1a1a;
 }
 </style>

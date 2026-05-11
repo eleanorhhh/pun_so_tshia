@@ -29,22 +29,22 @@ onMounted(() => {
 
 <style scoped>
 .dashboard {
-  display: flex;
+  display: flex; /* 使用彈性佈局讓列表與地圖並排 */
   gap: 20px;
   padding: 20px;
-  width: 100vw; /* 確保整個儀表板有撐滿視窗 */
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  height: 90vh; /* 設定足夠的視窗高度 */
+  box-sizing: border-box;
 }
 
 .sidebar {
   width: 300px;
-  flex-shrink: 0; /* 確保側邊欄不會被地圖擠壓 */
+  flex-shrink: 0; /* 鎖定寬度，不被地圖擠壓 */
 }
 
 .map-area {
-  flex-grow: 1;
-  width: 100%; /* 🌟 關鍵：強制地圖區域佔滿剩餘的空間 */
-  min-width: 0; /* 🌟 雙重保險：防止 Flex 子元素計算錯誤而縮水 */
+  flex-grow: 1; /* 強制地圖區域佔滿右側所有剩餘空間[cite: 3] */
+  min-width: 0; /* 避免 flex 項目溢出[cite: 3] */
+  height: 100%;
 }
 </style>
