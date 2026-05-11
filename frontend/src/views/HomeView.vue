@@ -1,50 +1,46 @@
 <template>
-  <main class="dashboard">
-    <!-- 左邊放列表 -->
-    <div class="sidebar">
-      <TruckList />
-    </div>
+  <div class="layout-container">
+    <header class="navbar">
+      <h1>高雄垃圾車即時地圖</h1>
+    </header>
 
-    <!-- 右邊放地圖 -->
-    <div class="map-area">
+    <main class="map-area">
       <MapViewer />
-    </div>
-  </main>
+    </main>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
 import MapViewer from '@/components/MapViewer.vue';
-import TruckList from '@/components/TruckList.vue';
-import { useTruckStore } from '@/stores/truckStore';
-
-const truckStore = useTruckStore();
-
-onMounted(() => {
-  // 元件掛載時，呼叫 API 抓取資料
-  // 資料一回來，TruckList 跟 MapViewer 就會自動同步更新！
-  truckStore.fetchTruckData();
-});
 </script>
 
 <style scoped>
-.dashboard {
-  display: flex; /* 使用彈性佈局讓列表與地圖並排 */
-  gap: 20px;
-  padding: 20px;
-  width: 100%;
-  height: 90vh; /* 設定足夠的視窗高度 */
-  box-sizing: border-box;
+/* 1. 最外層容器：設定為垂直彈性排版，撐滿整個視窗 */
+.layout-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* 100vh 代表螢幕的 100% 高度 */
+  width: 100vw;
+  overflow: hidden; /* 隱藏多餘的網頁捲軸 */
 }
 
-.sidebar {
-  width: 300px;
-  flex-shrink: 0; /* 鎖定寬度，不被地圖擠壓 */
+/* 2. 上方 Navbar：固定高度 */
+.navbar {
+  height: 64px; /* 固定高度 */
+  background-color: #1f2937; /* 深灰色背景 */
+  color: white;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  font-size: 1.25rem;
+  font-weight: bold;
+  flex-shrink: 0; /* 確保 Navbar 絕對不會被地圖擠壓變形 */
 }
 
+/* 3. 下方地圖區塊：自動填滿剩餘空間 */
 .map-area {
-  flex-grow: 1; /* 強制地圖區域佔滿右側所有剩餘空間[cite: 3] */
-  min-width: 0; /* 避免 flex 項目溢出[cite: 3] */
-  height: 100%;
+  flex-grow: 1; /* 🌟 關鍵魔法：自動把 Navbar 剩下的空間全部吃掉 */
+  position: relative;
+  width: 100%;
 }
 </style>

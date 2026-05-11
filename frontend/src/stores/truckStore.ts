@@ -1,28 +1,52 @@
-import { ref } from 'vue'
 import { defineStore } from 'pinia'
-
-export interface ScheduleItem {
-  lat?: number;
-  lng?: number;
-  time?: string;
-  location?: string;
-  // 若您的 JSON 是大寫或中文欄位，請在這裡對應修改
-}
+import { ref } from 'vue'
 
 export const useTruckStore = defineStore('truck', () => {
-  // 存放垃圾車資料的變數
-  const truckData = ref<ScheduleItem[]>([])
+  // ==============================
+  // 1. 垃圾車資料狀態 (保留你原本的架構)
+  // ==============================
+  const truckData = ref<any[]>([])
 
-  // 取得資料的動作 (Action)
   const fetchTruckData = async () => {
-    try {
-      const response = await fetch('/Schedule.json')
-      if (!response.ok) throw new Error('找不到 Schedule.json')
-      truckData.value = await response.json()
-    } catch (error) {
-      console.error('載入垃圾車資料失敗:', error)
+    // 這裡保留你未來要串接高雄市垃圾車 API 的邏輯
+    console.log('準備取得垃圾車資料...')
+  }
+
+  // ==============================
+  // 2. 使用者地理位置狀態
+  // ==============================
+  // 儲存使用者的 [緯度, 經度]
+  const userLocation = ref<[number, number] | null>(null)
+
+  // 呼叫瀏覽器 API 取得位置
+  const getUserLocation = () => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          userLocation.value = [pos.coords.latitude, pos.coords.longitude]
+          console.log('成功取得使用者位置:', userLocation.value)
+        },
+        (err) => {
+          console.warn('定位失敗或使用者拒絕授權:', err.message)
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
+        }
+      )
+    } else {
+      console.warn('您的瀏覽器不支援地理位置功能')
     }
   }
 
-  return { truckData, fetchTruckData }
+  // ==============================
+  // 3. 確保將所有狀態與函數 return 給外部使用
+  // ==============================
+  return {
+    truckData,
+    fetchTruckData,
+    userLocation,
+    getUserLocation
+  }
 })

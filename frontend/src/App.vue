@@ -7,12 +7,14 @@ import HomeView from './views/HomeView.vue';
 </script>
 
 <style>
-/* 這裡把原本預設的 header, logo 樣式全部刪除！ */
-html, body {
+/* 🌟 把 #app 也加進來，強制撐開整個畫面，覆蓋掉預設的干擾 */
+html, body, #app {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
-  background-color: #f8f9fa; /* 給一個淡淡的背景色，讓白色的列表更明顯 */
+  background-color: #f8f9fa;
+  display: block !important; /* 殺手鐧：強制取消 Vite 預設的 flex 置中 */
 }
+
 </style>
