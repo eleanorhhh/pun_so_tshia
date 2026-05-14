@@ -28,12 +28,12 @@ export const useTruckStore = defineStore('truck', () => {
   const fetchTruckData = async () => {
     isLoading.value = true
     try {
-      // 請確認 Schedule.json 是放在 frontend/public/Schedule.json
-      const ScheduleRes = await fetch('/Schedule.json')
+
+      const ScheduleRes = await fetch('/api/trucks/schedule')
 
       if (ScheduleRes.ok) {
         const json = await ScheduleRes.json()
-        scheduleData.value = json
+        scheduleData.value = json.data || json
       }
       } catch (error) {
       console.error('獲得垃圾車資料失敗', error)
