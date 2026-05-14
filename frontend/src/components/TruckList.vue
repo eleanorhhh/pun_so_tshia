@@ -12,7 +12,7 @@
       </h3>
     </div>
 
-    <div class="flex-1 overflow-y-auto">
+    <div class="flex-1 overflow-y-auto p-5">
 
       <div v-if="step === 1" class="grid grid-cols-3 gap-3">
         <button
