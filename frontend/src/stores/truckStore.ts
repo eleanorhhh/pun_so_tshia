@@ -16,7 +16,7 @@ export const useTruckStore = defineStore('truck', () => {
   const userLocation = ref<[number, number] | null>(null)
   const isLoading = ref(false)
   // 🌟 測試設定 1：設定為 true 會顯示所有站點，不論時間
-  const debugMode = ref(true)
+  const debugMode = ref(false)
 
   // 🌟 測試設定 2：模擬現在是晚上 7 點半
  // const now = ref(new Date('2026-05-12T19:30:00'))
@@ -33,7 +33,11 @@ export const useTruckStore = defineStore('truck', () => {
 
       if (ScheduleRes.ok) {
         const json = await ScheduleRes.json()
-        scheduleData.value = json.data || json
+       scheduleData.value = (json.Data || json.data || json).filter((stop: TruckStop) => {
+        return stop.行政區 &&
+         stop.行政區.length > 1 &&
+         stop.行政區.endsWith('區');
+      })
       }
       } catch (error) {
       console.error('獲得垃圾車資料失敗', error)
