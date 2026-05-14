@@ -58,6 +58,24 @@ watch(() => truckStore.filteredTruckData, (newData) => {
   })
 }, { immediate: true, deep: true })
 
+//監聽使用者的定位，一但拿到座標，就讓地圖飛過去並標記
+watch(() => truckStore.userLocation,(newLocation) =>{
+  //把地圖視角移動到使用者的位置
+  if(newLocation && map.value){
+    map.value.flyTo(newLocation,15,{animate:true,duration:1.0})
+  }
+  const userMarker = L.circle(newLocation!,{
+    radius:  150 ,
+    fillColor:"#3B82F6",
+    color:"#FFFFFF",
+    opacity:1,
+    weight:2,
+    fillOpacity: 0.5
+  })
+  userMarker.bindPopup('<b class="text-blue-600"> 您的位置</b>').openPopup()
+  userMarker.addTo(map.value!)
+})
+
 onMounted(async () => {
   await nextTick()
   if (!mapContainer.value) return
