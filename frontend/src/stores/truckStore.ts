@@ -12,40 +12,46 @@ export interface TruckStop {
 }
 
 export const useTruckStore = defineStore('truck', () => {
-  const truckData = ref<TruckStop[]>([])
+ const scheduleData = ref<TruckStop[]>([])
   const userLocation = ref<[number, number] | null>(null)
-
+  const isLoading = ref(false)
   // 🌟 測試設定 1：設定為 true 會顯示所有站點，不論時間
   const debugMode = ref(true)
 
   // 🌟 測試設定 2：模擬現在是晚上 7 點半
-  const now = ref(new Date('2026-05-12T19:30:00'))
+ // const now = ref(new Date('2026-05-12T19:30:00'))
 
+ // 🌟 1. 抓取用戶當下真實的系統時間
+  const now = ref(new Date())
+
+  //拿取schedule.json的資料，並存到truckData裡面
   const fetchTruckData = async () => {
+    isLoading.value = true
     try {
       // 請確認 Schedule.json 是放在 frontend/public/Schedule.json
-      const response = await fetch('/Schedule.json')
-      const json = await response.json()
-      if (json.success && json.data) {
-        truckData.value = json.data as TruckStop[]
-        console.log('✅ 成功載入資料，總數：', truckData.value.length)
+      const ScheduleRes = await fetch('/Schedule.json')
+
+      if (ScheduleRes.ok) {
+        const json = await ScheduleRes.json()
+        scheduleData.value = json
       }
-    } catch (error) {
-      console.error('❌ 無法取得 Schedule.json，請檢查檔案是否在 public 資料夾下', error)
+      } catch (error) {
+      console.error('獲得垃圾車資料失敗', error)
+    } finally {
+      isLoading.value = false
     }
   }
-
   const filteredTruckData = computed(() => {
     // 🌟 如果開啟除錯模式，直接回傳全部資料，方便測試地圖畫點
     if (debugMode.value) {
-      return truckData.value
+      return scheduleData.value
     }
 
     const currentHour = now.value.getHours()
     const currentMinute = now.value.getMinutes()
     const currentTotalMinutes = currentHour * 60 + currentMinute
 
-    return truckData.value.filter(stop => {
+    return scheduleData.value.filter(stop => {
       if (!stop.停留時間 || !stop.停留時間.includes(':')) return false
 
       const timeParts = stop.停留時間.split(':')
@@ -56,9 +62,10 @@ export const useTruckStore = defineStore('truck', () => {
       const stopTotalMinutes = h * 60 + m
       const diff = Math.abs(currentTotalMinutes - stopTotalMinutes)
 
-      return diff <= 10
+      return diff <= 5
     })
   })
+
 
   const getUserLocation = () => {
     if ('geolocation' in navigator) {
@@ -73,7 +80,7 @@ export const useTruckStore = defineStore('truck', () => {
   }
 
   return {
-    truckData,
+    scheduleData,
     filteredTruckData,
     fetchTruckData,
     userLocation,

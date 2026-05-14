@@ -32,4 +32,23 @@ const truckStore = useTruckStore();
 }
 .time { font-weight: bold; color: #e67e22; }
 .location { font-size: 14px; color: #555; }
+
+/* 基本景點卡片樣式 */
+.spot-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px var(--shadow-color);
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: 400px; /* 固定高度讓網格整齊 */
+}
+
+.spot-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
 </style>
