@@ -21,7 +21,7 @@ def load_json_data(filename: str):
         return json.load(f)
     
 #定義提供班表的 API Endpoint
-@router.get("/schelule")
+@router.get("/schedule")
 def get_truck_schedule():
     """取得垃圾車班表資料"""
     return load_json_data("Schedule.json")
