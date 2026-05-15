@@ -41,10 +41,31 @@ async def get_realtime_data():
                 raise HTTPException(status_code=response.status_code, detail="無法取得即時資料")
                 
                 #取得原始資料
-                raw_data = response.json()
+            raw_data = response.json()
+            raw_trucks = raw_data.get("Data", [])
+
+            cleaned_data = []
+            for item in raw_trucks:
+                location_str = item.get("location", "")
                 
-                #包裝成前端喜歡的格式
-                return {"Data":raw_data}
+                # 🔍 判斷有沒有「區」
+                if "區" in location_str:
+                    # ✂️ 找到「區」的位置，並往前剪下 3 個字
+                    pos = location_str.find("區")
+                    district_name = location_str[pos - 2 : pos + 1]
+                    
+                    # 📦 重新包裝成前端需要的格式與正確的欄位名稱
+                    new_item = {
+                        "車號": item.get("car"),
+                        "行政區": district_name,
+                        "經度": item.get("x"),
+                        "緯度": item.get("y"),
+                        "時間": item.get("time"),
+                        "地點": location_str
+                    }
+                    cleaned_data.append(new_item)
+
+            return {"Data": cleaned_data}
             
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"伺服器內部錯誤: {str(e)}")
