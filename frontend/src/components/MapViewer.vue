@@ -54,6 +54,16 @@ defineExpose({
   resetView
 })
 
+
+// 🧠 建立一個聰明的資料切換器
+const activeData = computed(() => {
+  if (truckStore.displayMode === 'schedule') {
+    return truckStore.filteredTruckData // 📅 班表模式 -> 輸出班表資料
+  } else {
+    return truckStore.realTimeData      // 🚛 即時模式 -> 輸出即時資料
+  }
+})
+
 // 🧠 將原本盯著 truckStore.filteredTruckData 的地方，換成 activeData.value
 watch(() => activeData.value, (newData) => {
   if (!map.value || !truckLayerGroup.value) return
@@ -71,15 +81,6 @@ watch(() => activeData.value, (newData) => {
     }
   })
 }, { immediate: true, deep: true })
-
-// 🧠 建立一個聰明的資料切換器
-const activeData = computed(() => {
-  if (truckStore.displayMode === 'schedule') {
-    return truckStore.filteredTruckData // 📅 班表模式 -> 輸出班表資料
-  } else {
-    return truckStore.realTimeData      // 🚛 即時模式 -> 輸出即時資料
-  }
-})
 
 
 
