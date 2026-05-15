@@ -1,5 +1,18 @@
 <template>
   <div class="w-full h-full relative overflow-hidden bg-[#f8f9fa]">
+        <button
+      :class="{ 'active-btn': truckStore.displayMode === 'schedule' }"
+      @click="truckStore.displayMode = 'schedule'"
+    >
+      看班表
+    </button>
+
+    <button
+      :class="{ 'active-btn': truckStore.displayMode === 'realtime' }"
+      @click="truckStore.displayMode = 'realtime'"
+    >
+      看即時動態
+    </button>
     <div ref="mapContainer" class="w-full h-full z-0"></div>
 
     <div class="absolute bottom-6 right-6 z-10">
@@ -11,11 +24,11 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, ref, nextTick, watch } from 'vue'
+import { onMounted, onUnmounted, shallowRef, ref, nextTick, watch ,computed} from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import * as topojson from 'topojson-client'
-import { useTruckStore } from '@/stores/truckStore'
+import { useTruckStore , type TruckStop } from '@/stores/truckStore'
 import type { Topology , GeometryObject } from 'topojson-specification'
 import type { FeatureCollection } from 'geojson'
 
@@ -41,22 +54,34 @@ defineExpose({
   resetView
 })
 
-// --- 以下地圖初始化與監聽邏輯維持不變 ---
-watch(() => truckStore.filteredTruckData, (newData) => {
+// 🧠 將原本盯著 truckStore.filteredTruckData 的地方，換成 activeData.value
+watch(() => activeData.value, (newData) => {
   if (!map.value || !truckLayerGroup.value) return
   truckLayerGroup.value.clearLayers()
-  newData.forEach((stop) => {
+  newData.forEach((stop: TruckStop) => {
+    // 這裡原本畫圓點（L.circleMarker）的邏輯完全不用動！🎉
     const lat = parseFloat(stop.緯度 as string)
     const lng = parseFloat(stop.經度 as string)
     if (!isNaN(lat) && !isNaN(lng)) {
       const marker = L.circleMarker([lat, lng], {
         radius: 8, fillColor: "#F59E0B", color: "#FFFFFF", weight: 2, opacity: 1, fillOpacity: 0.9
       })
-      marker.bindPopup(`<b class="text-orange-600">${stop.停留地點}</b><br>🕒 ${stop.停留時間}`)
+      marker.bindPopup(`<b class="text-orange-600">${stop.停留地點}</b><br>🕒 ${stop.停留時間 || '即時動態'}`)
       marker.addTo(truckLayerGroup.value!)
     }
   })
 }, { immediate: true, deep: true })
+
+// 🧠 建立一個聰明的資料切換器
+const activeData = computed(() => {
+  if (truckStore.displayMode === 'schedule') {
+    return truckStore.filteredTruckData // 📅 班表模式 -> 輸出班表資料
+  } else {
+    return truckStore.realTimeData      // 🚛 即時模式 -> 輸出即時資料
+  }
+})
+
+
 
 //監聽使用者的定位，一但拿到座標，就讓地圖飛過去並標記
 watch(() => truckStore.userLocation,(newLocation) =>{

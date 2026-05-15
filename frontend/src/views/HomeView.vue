@@ -30,6 +30,7 @@ const TruckListClick = () =>{
       <div class="ml-3">
         <span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs font-bold">♻️ 回收日</span>
       </div>
+      
     </header>
 
     <main class="flex-1 relative overflow-hidden">

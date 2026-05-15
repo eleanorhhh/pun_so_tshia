@@ -12,9 +12,13 @@ export interface TruckStop {
 }
 
 export const useTruckStore = defineStore('truck', () => {
- const scheduleData = ref<TruckStop[]>([])
+  const scheduleData = ref<TruckStop[]>([])
+  const realTimeData = ref<TruckStop[]>([])
   const userLocation = ref<[number, number] | null>(null)
   const isLoading = ref(false)
+
+  // 預設先顯示班表模式
+  const displayMode = ref<'schedule' | 'realtime'>('schedule')
   // 🌟 測試設定 1：設定為 true 會顯示所有站點，不論時間
   const debugMode = ref(false)
 
@@ -45,6 +49,20 @@ export const useTruckStore = defineStore('truck', () => {
       isLoading.value = false
     }
   }
+  const fetchRealtimeData = async () => {
+    try {
+      const realtimeRes = await fetch('/api/trucks/realtime')
+
+      if (realtimeRes.ok) {
+        const json = await realtimeRes.json()
+
+        // 這裡要把拿到的資料放進我們剛剛準備好的 realtimeData 盒子裡
+        realTimeData.value = json.Data || json.data || []
+      }
+    } catch (error) {
+      console.error('獲得即時動態資料失敗', error)
+    }
+}
   const filteredTruckData = computed(() => {
     // 🌟 如果開啟除錯模式，直接回傳全部資料，方便測試地圖畫點
     if (debugMode.value) {
@@ -87,8 +105,11 @@ export const useTruckStore = defineStore('truck', () => {
     scheduleData,
     filteredTruckData,
     fetchTruckData,
+    realTimeData,
+    fetchRealtimeData,
     userLocation,
     getUserLocation,
-    debugMode // 匯出這個，你可以在 Vue DevTools 手動切換
+    debugMode, // 匯出這個，你可以在 Vue DevTools 手動切換
+    displayMode, // 匯出這個，讓你在 Vue DevTools 切換顯示模式
   }
 })
